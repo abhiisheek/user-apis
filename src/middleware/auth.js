@@ -1,7 +1,8 @@
 const jwt = require("jsonwebtoken");
 
-const secret = require("../secret");
+const secret = require("../utils/secret");
 const User = require("../models/user");
+const { default: logger } = require("../utils/logger");
 
 module.exports = (req, res, next) => {
   const authorization = req.get("Authorization");
@@ -25,7 +26,7 @@ module.exports = (req, res, next) => {
 
       next();
     } catch (err) {
-      console.error("Token verification failed", err);
+      logger.error("Token verification failed", err);
       res.status(401).send(`Unauthorized - ${err.name}`);
     }
   } else {
