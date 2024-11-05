@@ -15,7 +15,7 @@ import sanitizer from "express-html-sanitizer";
 import rateLimiter from './middleware/rateLimiter.js';
 
 import indexRouter from "./routes/index.js";
-// const usersRouter = require("./routes/users");
+import usersRouter from "./routes/user.js";
 
 const { json, urlencoded } = bodyParser;
 
@@ -41,7 +41,7 @@ app.options("*", cors());
 app.disable("x-powered-by");
 
 app.use("/", indexRouter);
-// app.use("/users", usersRouter);
+app.use("/user", usersRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

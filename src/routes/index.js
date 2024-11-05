@@ -12,8 +12,14 @@ mongoose
   .then(() => logger.info("Connected!"))
   .catch((e) => logger.info("Failed to connect to DB...", e));
 
-router.get("/", function (req, res) {
+router.get("/", (req, res) => {
   res.send("User Microservice running....");
+
+  logger.info("Testing logger", req);
+});
+
+router.get("/health", (req, res) => {
+  res.send("Ok");
 
   logger.info("Testing logger", req);
 });
