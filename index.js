@@ -13,7 +13,7 @@ import logger from './src/utils/logger.js';
  */
 
 
-const port = process.env.PORT || 400;
+const port = process.env.PORT || 4000;
 
 app.set('port', port);
 

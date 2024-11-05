@@ -1,10 +1,9 @@
 import express from "express";
 import mongoose from "mongoose";
 
-import logger from "../utils/logger.js"
+import logger from "../utils/logger.js";
 
 const router = express.Router();
-
 
 mongoose
   .connect(

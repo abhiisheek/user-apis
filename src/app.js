@@ -1,21 +1,44 @@
 import 'dotenv/config'
+
 import createError from "http-errors";
 import express from "express";
 import cookieParser from "cookie-parser";
 import logger from "morgan";
 import cors from "cors";
+import helmet from "helmet";
+import bodyParser from "body-parser";
+import compression from "compression";
+import xss from "xss-clean";
+import sanitizer from "express-html-sanitizer";
+
+
+import rateLimiter from './middleware/rateLimiter.js';
 
 import indexRouter from "./routes/index.js";
 // const usersRouter = require("./routes/users");
+
+const { json, urlencoded } = bodyParser;
+
+const sanitizeConfig = {
+  allowedTags: ["b", "i", "em", "strong", "a", "p"],
+  allowedAttributes: { a: ["href"] },
+};
 
 
 const app = express();
 
 app.use(cors());
 app.use(logger("dev"));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(json());
+app.use(urlencoded({ extended: false }));
 app.use(cookieParser());
+app.use(helmet());
+app.use(sanitizer(sanitizeConfig));
+app.use(rateLimiter);
+app.use(xss());
+app.use(compression());
+app.options("*", cors());
+app.disable("x-powered-by");
 
 app.use("/", indexRouter);
 // app.use("/users", usersRouter);
