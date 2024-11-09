@@ -5,9 +5,13 @@ const userSchema = mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true },
   password: { type: String, required: true },
-  preferences: {
-    langs: { type: Object },
+  status: {
+    type: String,
+    required: true,
+    enum: ["MALE", "FEMALE", "OTHERS"],
   },
+  dob: { type: String, required: true },
+  avatarURL: { type: String },
 });
 
-export default mongoose.model("User", userSchema);
+export default mongoose.model("Users", userSchema);
