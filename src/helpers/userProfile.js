@@ -9,4 +9,4 @@ export const getUserDetailsById = async (userId) => {
 };
 
 export const isUserPresent = async (userId) =>
-  getUserDetailsById(userId) ? true : false;
+  await getUserDetailsById(userId) ? true : false;

@@ -6,6 +6,11 @@ import { Addresses, Address } from "../models/addresses.js";
 import secret from "../utils/secret.js";
 import { errorHandler } from "../utils/index.js";
 import { getUserDetailsById, isUserPresent } from "../helpers/userProfile.js";
+import {
+  getAddressByUserId,
+  getAddressRecordById,
+  getAddressRecordByName,
+} from "../helpers/address.js";
 
 const signup = async (req, res) => {
   const email = req.body.email;
@@ -208,12 +213,14 @@ const addAddress = async (req, res) => {
   }
 
   try {
-    if (!isUserPresent(userId)) {
+    const userPresent = await isUserPresent(userId);
+
+    if (!userPresent) {
       errorHandler(res, { message: "User not found!" }, 400);
       return;
     }
 
-    const userAddressRecord = await Addresses.findOne({ userId }).lean();
+    const userAddressRecord = await getAddressByUserId(userId);
 
     const address = new Address({
       _id: new mongoose.Types.ObjectId(),
@@ -225,7 +232,7 @@ const addAddress = async (req, res) => {
     });
 
     if (userAddressRecord) {
-      if (userAddressRecord.addresses.find((item) => item.name === name)) {
+      if (getAddressRecordByName(userAddressRecord.addresses, name)) {
         errorHandler(
           res,
           { message: "Address already exists for the user" },
@@ -271,21 +278,23 @@ const updateAddress = async (req, res) => {
   const pincode = req.body.pincode;
   const contactNumber = req.body.contactNumber;
 
-  if (!userId || !street || !city || !pincode || !contactNumber || !addressId) {
+  if (!userId || !addressId) {
     errorHandler(res, { message: "Bad Request - Payload not matching" }, 400);
     return;
   }
 
   try {
-    if (!isUserPresent(userId)) {
+    const userPresent = await isUserPresent(userId);
+
+    if (!userPresent) {
       errorHandler(res, { message: "User not found!" }, 400);
       return;
     }
 
-    const userAddressRecord = await Addresses.findOne({ userId }).lean();
+    const userAddressRecord = await getAddressByUserId(userId);
 
     if (userAddressRecord) {
-      if (!userAddressRecord.addresses.find((item) => item._id == addressId)) {
+      if (!getAddressRecordById(userAddressRecord.addresses, addressId)) {
         errorHandler(res, { message: "User's Address not found!" }, 400);
         return;
       }
@@ -340,12 +349,14 @@ const getAddresses = async (req, res) => {
   }
 
   try {
-    if (!isUserPresent(userId)) {
+    const userPresent = await isUserPresent(userId);
+
+    if (!userPresent) {
       errorHandler(res, { message: "User not found!" }, 400);
       return;
     }
 
-    const userAddressRecord = await Addresses.findOne({ userId }).lean();
+    const userAddressRecord = await getAddressByUserId(userId);
 
     if (userAddressRecord) {
       res.send(userAddressRecord);
@@ -368,12 +379,14 @@ const getAddress = async (req, res) => {
   }
 
   try {
-    if (!isUserPresent(userId)) {
+    const userPresent = await isUserPresent(userId);
+
+    if (!userPresent) {
       errorHandler(res, { message: "User not found!" }, 400);
       return;
     }
 
-    const userAddressRecord = await Addresses.findOne({ userId }).lean();
+    const userAddressRecord = await getAddressByUserId(userId);
 
     if (userAddressRecord) {
       const address = userAddressRecord.addresses.find(
@@ -405,12 +418,14 @@ const deleteAddress = async (req, res) => {
   }
 
   try {
-    if (!isUserPresent(userId)) {
+    const userPresent = await isUserPresent(userId);
+
+    if (!userPresent) {
       errorHandler(res, { message: "User not found!" }, 400);
       return;
     }
 
-    const userAddressRecord = await Addresses.findOne({ userId }).lean();
+    const userAddressRecord = await getAddressByUserId(userId);
 
     if (userAddressRecord) {
       if (!userAddressRecord.addresses.find((item) => item._id != addressId)) {
