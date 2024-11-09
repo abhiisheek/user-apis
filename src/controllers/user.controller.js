@@ -5,8 +5,8 @@ import User from "../models/user.js";
 import { Addresses, Address } from "../models/addresses.js";
 import secret from "../utils/secret.js";
 import { errorHandler } from "../utils/index.js";
+import { getUserDetailsById, isUserPresent } from "../helpers/userProfile.js";
 
-// TODO: Add gender, dob
 const signup = async (req, res) => {
   const email = req.body.email;
   const name = req.body.name;
@@ -173,9 +173,7 @@ const updateUser = async (req, res) => {
   }
 
   try {
-    const details = await User.findOne({
-      _id: userId,
-    }).lean();
+    const details = await getUserDetailsById(userId);
 
     const updated = await User.findOneAndUpdate(
       { _id: userId },
@@ -210,11 +208,7 @@ const addAddress = async (req, res) => {
   }
 
   try {
-    const user = await User.findOne({
-      _id: userId,
-    }).lean();
-
-    if (!user) {
+    if (!isUserPresent(userId)) {
       errorHandler(res, { message: "User not found!" }, 400);
       return;
     }
@@ -268,6 +262,191 @@ const addAddress = async (req, res) => {
   }
 };
 
+const updateAddress = async (req, res) => {
+  const userId = req.params["userId"];
+  const addressId = req.params["addressId"];
+
+  const street = req.body.street;
+  const city = req.body.city;
+  const pincode = req.body.pincode;
+  const contactNumber = req.body.contactNumber;
+
+  if (!userId || !street || !city || !pincode || !contactNumber || !addressId) {
+    errorHandler(res, { message: "Bad Request - Payload not matching" }, 400);
+    return;
+  }
+
+  try {
+    if (!isUserPresent(userId)) {
+      errorHandler(res, { message: "User not found!" }, 400);
+      return;
+    }
+
+    const userAddressRecord = await Addresses.findOne({ userId }).lean();
+
+    if (userAddressRecord) {
+      if (!userAddressRecord.addresses.find((item) => item._id == addressId)) {
+        errorHandler(res, { message: "User's Address not found!" }, 400);
+        return;
+      }
+
+      const updatedAddresses = userAddressRecord.addresses.map((item) => {
+        if (item._id == addressId) {
+          return {
+            ...item,
+            street: street || item.street,
+            city: city || item.city,
+            pincode: pincode || item.pincode,
+            contactNumber: contactNumber || item.contactNumber,
+          };
+        } else {
+          return item;
+        }
+      });
+
+      if (userAddressRecord.default._id == addressId) {
+        userAddressRecord.default = updatedAddresses.find(
+          (item) => item._id == addressId
+        );
+      }
+
+      const updatedRecord = await Addresses.findOneAndUpdate(
+        { userId },
+        {
+          addresses: updatedAddresses,
+          default: userAddressRecord.default,
+        },
+        {
+          new: true,
+        }
+      );
+
+      res.send(updatedRecord);
+    } else {
+      errorHandler(res, { message: "User's Address not found!" }, 400);
+      return;
+    }
+  } catch (err) {
+    errorHandler(res, err, 500);
+  }
+};
+
+const getAddresses = async (req, res) => {
+  const userId = req.params["userId"];
+
+  if (!userId) {
+    errorHandler(res, { message: "Bad Request - Payload not matching" }, 400);
+    return;
+  }
+
+  try {
+    if (!isUserPresent(userId)) {
+      errorHandler(res, { message: "User not found!" }, 400);
+      return;
+    }
+
+    const userAddressRecord = await Addresses.findOne({ userId }).lean();
+
+    if (userAddressRecord) {
+      res.send(userAddressRecord);
+    } else {
+      errorHandler(res, { message: "User's Address not found!" }, 400);
+      return;
+    }
+  } catch (err) {
+    errorHandler(res, err, 500);
+  }
+};
+
+const getAddress = async (req, res) => {
+  const userId = req.params["userId"];
+  const addressId = req.params["addressId"];
+
+  if (!userId || !addressId) {
+    errorHandler(res, { message: "Bad Request - Payload not matching" }, 400);
+    return;
+  }
+
+  try {
+    if (!isUserPresent(userId)) {
+      errorHandler(res, { message: "User not found!" }, 400);
+      return;
+    }
+
+    const userAddressRecord = await Addresses.findOne({ userId }).lean();
+
+    if (userAddressRecord) {
+      const address = userAddressRecord.addresses.find(
+        (item) => item._id == addressId
+      );
+
+      if (address) {
+        res.send(address);
+      } else {
+        errorHandler(res, { message: "User's Address not found!" }, 400);
+        return;
+      }
+    } else {
+      errorHandler(res, { message: "User's Address not found!" }, 400);
+      return;
+    }
+  } catch (err) {
+    errorHandler(res, err, 500);
+  }
+};
+
+const deleteAddress = async (req, res) => {
+  const userId = req.params["userId"];
+  const addressId = req.params["addressId"];
+
+  if (!userId || !addressId) {
+    errorHandler(res, { message: "Bad Request - Payload not matching" }, 400);
+    return;
+  }
+
+  try {
+    if (!isUserPresent(userId)) {
+      errorHandler(res, { message: "User not found!" }, 400);
+      return;
+    }
+
+    const userAddressRecord = await Addresses.findOne({ userId }).lean();
+
+    if (userAddressRecord) {
+      if (!userAddressRecord.addresses.find((item) => item._id != addressId)) {
+        errorHandler(res, { message: "User's Address not found!" }, 400);
+        return;
+      }
+
+      const updatedAddresses = userAddressRecord.addresses.filter(
+        (item) => item._id != addressId
+      );
+
+      if (userAddressRecord.default._id == addressId) {
+        userAddressRecord.default = null;
+      }
+
+      const updatedRecord = await Addresses.findOneAndUpdate(
+        { userId },
+        {
+          addresses: updatedAddresses,
+          default: userAddressRecord.default,
+        },
+        {
+          new: true,
+        }
+      );
+
+      res.send(updatedRecord);
+    } else {
+      errorHandler(res, { message: "User's Address not found!" }, 400);
+      return;
+    }
+  } catch (err) {
+    errorHandler(res, err, 500);
+  }
+};
+
 export default {
   signup,
   login,
@@ -275,4 +454,8 @@ export default {
   getUser,
   updateUser,
   addAddress,
+  getAddress,
+  getAddresses,
+  updateAddress,
+  deleteAddress,
 };
