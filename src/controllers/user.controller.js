@@ -462,6 +462,28 @@ const deleteAddress = async (req, res) => {
   }
 };
 
+const getOrders = async (req, res) => {
+  const userId = req.params["userId"];
+
+  if (!userId) {
+    errorHandler(res, { message: "Bad Request - Payload not matching" }, 400);
+    return;
+  }
+
+  try {
+    const userPresent = await isUserPresent(userId);
+
+    if (!userPresent) {
+      errorHandler(res, { message: "User not found!" }, 400);
+      return;
+    }
+
+    // Add logic to hit order service to get orders list
+  } catch (err) {
+    errorHandler(res, err, 500);
+  }
+};
+
 export default {
   signup,
   login,
@@ -473,4 +495,5 @@ export default {
   getAddresses,
   updateAddress,
   deleteAddress,
+  getOrders,
 };
