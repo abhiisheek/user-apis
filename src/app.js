@@ -1,9 +1,8 @@
-import 'dotenv/config'
+import "dotenv/config";
 
 import createError from "http-errors";
 import express from "express";
 import cookieParser from "cookie-parser";
-import logger from "morgan";
 import cors from "cors";
 import helmet from "helmet";
 import bodyParser from "body-parser";
@@ -11,8 +10,8 @@ import compression from "compression";
 import xss from "xss-clean";
 import sanitizer from "express-html-sanitizer";
 
-
-import rateLimiter from './middleware/rateLimiter.js';
+import rateLimiter from "./middleware/rateLimiter.js";
+import logger from "./utils/logger.js";
 
 import indexRouter from "./routes/index.js";
 import usersRouter from "./routes/user.js";
@@ -24,11 +23,9 @@ const sanitizeConfig = {
   allowedAttributes: { a: ["href"] },
 };
 
-
 const app = express();
 
 app.use(cors());
-app.use(logger("dev"));
 app.use(json());
 app.use(urlencoded({ extended: false }));
 app.use(cookieParser());
@@ -39,6 +36,22 @@ app.use(xss());
 app.use(compression());
 app.options("*", cors());
 app.disable("x-powered-by");
+
+// log all requests
+app.use((req, res, next) => {
+  const log = {
+    method: req.method,
+    url: req.url,
+    statusCode: res.statusCode,
+  };
+
+  if (res.statusCode > 299) {
+    logger.error(log);
+  } else {
+    logger.info(log);
+  }
+  next();
+});
 
 app.use("/", indexRouter);
 app.use("/user", usersRouter);
