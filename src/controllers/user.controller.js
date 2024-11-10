@@ -44,6 +44,7 @@ const signup = async (req, res) => {
             dob,
             gender,
             avatarURL,
+            wishlist: [],
           });
 
           await newUser.save();
@@ -484,6 +485,101 @@ const getOrders = async (req, res) => {
   }
 };
 
+const getWishlist = async (req, res) => {
+  const userId = req.params["userId"];
+
+  if (!userId) {
+    errorHandler(res, { message: "Bad Request - Payload not matching" }, 400);
+    return;
+  }
+
+  try {
+    const details = await getUserDetailsById(userId);
+
+    if (!details) {
+      errorHandler(res, { message: "User not found!" }, 400);
+      return;
+    }
+
+    res.send(details.wishlist);
+  } catch (err) {
+    errorHandler(res, err, 500);
+  }
+};
+
+const addItemToWishlist = async (req, res) => {
+  const userId = req.params["userId"];
+
+  const productId = req.body.productId;
+
+  if (!userId || !productId) {
+    errorHandler(res, { message: "Bad Request - Payload not matching" }, 400);
+    return;
+  }
+
+  try {
+    const details = await getUserDetailsById(userId);
+
+    if (!details) {
+      errorHandler(res, { message: "User not found!" }, 400);
+      return;
+    }
+
+    details.wishlist.push(productId)
+
+    const wishlist = details.wishlist;
+
+    await User.findOneAndUpdate(
+      { _id: userId },
+      {
+        wishlist,
+      },
+      {
+        new: true,
+      }
+    );
+
+    res.send(wishlist);
+  } catch (err) {
+    errorHandler(res, err, 500);
+  }
+};
+
+const removeItemFromWishlist = async (req, res) => {
+  const userId = req.params["userId"];
+  const productId = req.params["productId"];
+
+  if (!userId || !productId) {
+    errorHandler(res, { message: "Bad Request - Payload not matching" }, 400);
+    return;
+  }
+
+  try {
+    const details = await getUserDetailsById(userId);
+
+    if (!details) {
+      errorHandler(res, { message: "User not found!" }, 400);
+      return;
+    }
+
+    const wishlist = details.wishlist.filter((id) => id != productId);
+
+    await User.findOneAndUpdate(
+      { _id: userId },
+      {
+        wishlist,
+      },
+      {
+        new: true,
+      }
+    );
+
+    res.send(wishlist);
+  } catch (err) {
+    errorHandler(res, err, 500);
+  }
+};
+
 export default {
   signup,
   login,
@@ -496,4 +592,7 @@ export default {
   updateAddress,
   deleteAddress,
   getOrders,
+  getWishlist,
+  addItemToWishlist,
+  removeItemFromWishlist,
 };

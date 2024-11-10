@@ -12,6 +12,7 @@ const userSchema = mongoose.Schema({
   },
   dob: { type: String, required: true },
   avatarURL: { type: String },
+  wishlist: [{ type: String }],
 });
 
 export default mongoose.model("Users", userSchema);

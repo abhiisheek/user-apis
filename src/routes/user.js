@@ -21,5 +21,12 @@ router.delete(
 );
 router.post("/:userId/address", auth, userController.addAddress);
 router.get("/:userId/orders", auth, userController.getOrders);
+router.get("/:userId/wishlist", auth, userController.getWishlist);
+router.put("/:userId/wishlist", auth, userController.addItemToWishlist);
+router.delete(
+  "/:userId/wishlist/:productId",
+  auth,
+  userController.removeItemFromWishlist
+);
 
 export default router;
