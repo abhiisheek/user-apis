@@ -480,6 +480,8 @@ const getOrders = async (req, res) => {
     }
 
     // Add logic to hit order service to get orders list
+
+    res.send(userPresent);
   } catch (err) {
     errorHandler(res, err, 500);
   }
