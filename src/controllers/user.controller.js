@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
+import axios from "axios";
 
 import User from "../models/user.js";
 import { Addresses, Address } from "../models/addresses.js";
@@ -479,9 +480,26 @@ const getOrders = async (req, res) => {
       return;
     }
 
-    // Add logic to hit order service to get orders list
+    const authorization = req.get("Authorization");
+    const apiKey = req.get("X-API-KEY");
 
-    res.send(userPresent);
+    const headers = {};
+
+    if (authorization) {
+      headers["Authorization"] = authorization;
+    } else if (apiKey) {
+      headers["X-API-KEY"] = apiKey;
+    }
+
+    const requestObject = {
+      url: `${process.env.order_service_url}/api/orders/user/${userId}`,
+      method: "get",
+      headers,
+    };
+
+    const response = await axios(requestObject);
+
+    res.send(response?.data);
   } catch (err) {
     errorHandler(res, err, 500);
   }
@@ -527,7 +545,7 @@ const addItemToWishlist = async (req, res) => {
       return;
     }
 
-    details.wishlist.push(productId)
+    details.wishlist.push(productId);
 
     const wishlist = details.wishlist;
 
