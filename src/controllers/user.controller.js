@@ -482,7 +482,7 @@ const getOrders = async (req, res) => {
     }
     
     const requestObject = {
-      url: `${process.env.order_service_url}/api/orders/user/${userId}`,
+      url: `${process.env.order_service_url}/user/${userId}`,
       method: "get",
       headers: getRequestHeaders(req),
     };
@@ -517,7 +517,7 @@ const getWishlist = async (req, res) => {
     }
 
     const requestObject = {
-      url: `${process.env.product_service_url}/products/listProducts/${details.wishlist.join(",")}`,
+      url: `${process.env.product_service_url}/listProducts/${details.wishlist.join(",")}`,
       method: "get",
       headers: getRequestHeaders(req),
     };
