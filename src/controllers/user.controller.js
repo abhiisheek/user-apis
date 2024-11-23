@@ -12,6 +12,7 @@ import {
   getAddressRecordById,
   getAddressRecordByName,
 } from "../helpers/address.js";
+import { getRequestHeaders } from "../helpers/request.js";
 
 const signup = async (req, res) => {
   const email = req.body.email;
@@ -479,22 +480,11 @@ const getOrders = async (req, res) => {
       errorHandler(res, { message: "User not found!" }, 400);
       return;
     }
-
-    const authorization = req.get("Authorization");
-    const apiKey = req.get("X-API-KEY");
-
-    const headers = {};
-
-    if (authorization) {
-      headers["Authorization"] = authorization;
-    } else if (apiKey) {
-      headers["X-API-KEY"] = apiKey;
-    }
-
+    
     const requestObject = {
       url: `${process.env.order_service_url}/api/orders/user/${userId}`,
       method: "get",
-      headers,
+      headers: getRequestHeaders(req),
     };
 
     const response = await axios(requestObject);
@@ -521,7 +511,20 @@ const getWishlist = async (req, res) => {
       return;
     }
 
-    res.send(details.wishlist);
+    if (Array.isArray(details.wishlist) && details.wishlist.length === 0) {
+      res.send(details.wishlist);
+      return;
+    }
+
+    const requestObject = {
+      url: `${process.env.product_service_url}/products/listProducts/${details.wishlist.join(",")}`,
+      method: "get",
+      headers: getRequestHeaders(req),
+    };
+
+    const response = await axios(requestObject);
+
+    res.send(response?.data);
   } catch (err) {
     errorHandler(res, err, 500);
   }
